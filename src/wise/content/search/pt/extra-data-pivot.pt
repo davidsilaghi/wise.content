@@ -1,31 +1,31 @@
 <div tal:define="data view/get_extra_data" class="extra-details">
-    <tal:block tal:repeat="info data" >
-        <tal:section define="section python: info[1]; section_title python: info[0]">
-            <h4 tal:content="section_title">Section title</h4>
+  <tal:block tal:repeat="info data" >
+    <tal:section define="section python: info[1]; section_title python: info[0]">
+      <h4 tal:content="section_title">Section title</h4>
 
-            <div class="tabs-wrapper" >
-                <ul  class="nav nav-tabs" id="tabs2" role="tablist" tal:condition="python: len(info[1]) > 1" >
-                    <tal:block tal:repeat="section_label section">
-                        <li class="nav-item">
+      <div class="tabs-wrapper" >
+        <ul  class="nav nav-tabs" id="tabs2" role="tablist" tal:condition="python: len(info[1]) > 1" >
+          <tal:block tal:repeat="section_label section">
+            <li class="nav-item">
 
                             <a class="nav-link" tal:define="utitle python: section_label or section_title"
-                               tal:attributes="id python:utitle.replace(' ', '_').replace('/','-').lower() + '-tab';
-                                href python:'#' + utitle.replace(' ', '_').replace('/','-').lower();
+                               tal:attributes="id python:utitle.replace(' ', '_').replace('/','-').replace(',' , '').lower() + '-tab';
+                                href python:'#' + utitle.replace(' ', '_').replace('/','-').replace(',' , '').lower();
                                 aria-controls python:utitle.replace(' ', '_').lower()"
                                data-toggle="tab"
                                role="tab"
                                aria-selected="true" tal:content="utitle"
 
-                            >Section title here</a>
-                        </li>
-                    </tal:block>
-                </ul>
+                >Section title here</a>
+            </li>
+          </tal:block>
+        </ul>
 
                 <div tal:attributes="class string:tab-content;id string:tabContents2">
                     <tal:block tal:repeat="section_label section" tal:define="istab python: 'tab-pane fade' if( len(info[1]) > 1) else ''" >
                         <div
                              tal:define="utitle python:section_label or section_title;"
-                             tal:attributes="id python: utitle.replace(' ', '_').replace('/','-').lower();
+                             tal:attributes="id python: utitle.replace(' ', '_').replace('/','-').replace(',' , '').lower();
                              class string: ${istab}"
                              role="tabpanel"
                         >
@@ -49,13 +49,13 @@
                             </tal:def>
                         </div>
 
-                    </tal:block>
-                    <!-- tal:repeat : section -->
+          </tal:block>
+          <!-- tal:repeat : section -->
 
-                </div>
-                <!-- tabs-wrapper -->
-            </div>
+        </div>
+        <!-- tabs-wrapper -->
+      </div>
 
-        </tal:section>
-    </tal:block>
+    </tal:section>
+  </tal:block>
 </div>

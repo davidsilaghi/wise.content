@@ -1,9 +1,8 @@
 import os
 import threading
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.sql import text
 from zope.sqlalchemy import register
 
 from wise.content.search import sql
@@ -58,9 +57,12 @@ def get_unique_from_mapper(mapper_class, column, *conditions):
     col = getattr(mapper_class, column)
 
     sess = session()
-    res = sess.query(col).filter(*conditions).distinct().order_by(col)
+    res = sess.query(func.trim(col))\
+        .filter(*conditions)\
+        .distinct()\
+        .order_by(col)
 
-    return sorted([x[0] for x in res])
+    return [x[0] for x in res]
 
 
 def get_unique_from_mapper_join(
@@ -80,7 +82,6 @@ def get_unique_from_mapper_join(
         *conditions
     ).order_by(order_field)
 
-    # import pdb; pdb.set_trace()
     total = q.count()
     item = q.offset(page).limit(1).first()
 
@@ -155,21 +156,17 @@ def get_item_by_conditions_joined(
     return [total, item]
 
 
-def get_a9_feature_impacts(msfd9_descriptor_id):
-    """ Used in extra_data for A9
-    """
-    conn = connection()
-    res = conn.execute(text("""
-SELECT DISTINCT FeatureType, FeaturesPressuresImpacts
-FROM MarineDB.dbo.MSFD9_Features
-WHERE MSFD9_Descriptor = :descriptor_id
-;
-"""), descriptor_id=msfd9_descriptor_id)
+def get_table_records(columns, *conditions, **kwargs):
+    order_by = kwargs.get('order_by')
+    sess = session()
+    q = sess.query(*columns).filter(*conditions)
 
-    items = []
-    for item in res:
-        items.append(item)
-    return sorted(items)
+    if order_by:
+        q = q.order_by(order_by)
+
+    total = q.count()
+
+    return total, q
 
 
 def get_available_marine_unit_ids(marine_unit_ids, klass):
@@ -178,7 +175,7 @@ def get_available_marine_unit_ids(marine_unit_ids, klass):
     sess = session()
     q = sess.query(klass.MarineUnitID).filter(
         klass.MarineUnitID.in_(marine_unit_ids)
-    ).distinct()
+    ).order_by(klass.MarineUnitID).distinct()
 
     total = q.count()
 
@@ -201,34 +198,38 @@ def get_marine_unit_id_names(marine_unit_ids):
     return [total, q]
 
 
-def get_a10_feature_targets(target_id):
-    """ Used in extra_data for A10
-    """
-    conn = connection()
-    res = conn.execute(text("""
-SELECT DISTINCT FeatureType, PhysicalChemicalHabitatsFunctionalPressures
-FROM MarineDB.dbo.MSFD10_FeaturesPressures
-WHERE MSFD10_Target = :target_id
-"""), target_id=target_id)
-
-    items = []
-    for item in res:
-        items.append(item)
-    return sorted(items)
-
-
-def get_a10_criteria_indicators(target_id):
-    conn = connection()
-    res = conn.execute(text("""
-SELECT DISTINCT GESDescriptorsCriteriaIndicators
-FROM MarineDB.dbo.MSFD10_DESCrit
-WHERE MSFD10_Target = :target_id
-"""), target_id=target_id)
-
-    items = []
-    for item in res:
-        items.append(item)
-    return sorted(items)
+# def get_a10_feature_targets(target_id):
+#     """ Used in extra_data for A10
+#     """
+#     conn = connection()
+#     res = conn.execute(text("""
+# SELECT DISTINCT FeatureType, PhysicalChemicalHabitatsFunctionalPressures
+# FROM MarineDB.dbo.MSFD10_FeaturesPressures
+# WHERE MSFD10_Target = :target_id
+# """), target_id=target_id)
+#
+#     items = []
+#
+#     for item in res:
+#         items.append(item)
+#
+#     return sorted(items)
+#
+#
+# def get_a10_criteria_indicators(target_id):
+#     conn = connection()
+#     res = conn.execute(text("""
+# SELECT DISTINCT GESDescriptorsCriteriaIndicators
+# FROM MarineDB.dbo.MSFD10_DESCrit
+# WHERE MSFD10_Target = :target_id
+# """), target_id=target_id)
+#
+#     items = []
+#
+#     for item in res:
+#         items.append(item)
+#
+#     return sorted(items)
 
 
 def get_related_record(klass, column, rel_id):

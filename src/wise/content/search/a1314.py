@@ -8,7 +8,7 @@ from z3c.form.field import Fields
 
 from .base import EmbededForm, ItemDisplayForm, MainForm
 from .db import get_all_records
-from .utils import data_to_xls, default_value_from_field
+from .utils import all_values_from_field, data_to_xls, default_value_from_field
 
 
 class StartArticle1314Form(MainForm):
@@ -73,6 +73,10 @@ class MarineUnitIDsForm(EmbededForm):
 
         return UniqueCodesForm(self, self.request)
 
+    def default_marine_unit_ids(self):
+        return all_values_from_field(self.context,
+                                     self.fields['marine_unit_ids'])
+
 
 class UniqueCodesForm(EmbededForm):
     """ Select the unique codes
@@ -84,6 +88,10 @@ class UniqueCodesForm(EmbededForm):
 
     def get_subform(self):
         return A1314ItemDisplay(self, self.request)
+
+    def default_unique_codes(self):
+        return all_values_from_field(self.context,
+                                     self.fields['unique_codes'])
 
 
 class A1314ItemDisplay(ItemDisplayForm):

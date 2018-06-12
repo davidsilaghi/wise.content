@@ -30,9 +30,9 @@
 
           <li class="nav-item" tal:condition="section/item">
             <a class="nav-link" tal:define="utitle section/title"
-               tal:attributes="id python:utitle.replace(' ', '_').lower() + '-tab';
-           href python:'#' + utitle.replace(' ', '_').lower();
-           aria-controls python:utitle.replace(' ', '_').lower();
+               tal:attributes="id python:utitle.replace(' ', '_').replace(',' , '').lower() + '-tab';
+           href python:'#' + utitle.replace(' ', '_').replace(',' , '').lower();
+           aria-controls python:utitle.replace(' ', '_').replace(',' , '').lower();
            title  section/title"
                data-toggle="tab"
                role="tab"
@@ -48,7 +48,7 @@
           <div class="tab-pane fade"
                tal:condition="section/item"
                tal:define="utitle section/title"
-               tal:attributes="id python:utitle.replace(' ', '_').lower()"
+               tal:attributes="id python:utitle.replace(' ', '_').replace(',' , '').lower()"
                role="tabpanel"
                tal:content="structure section"
           >...</div>

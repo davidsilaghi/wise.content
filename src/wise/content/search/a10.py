@@ -2,7 +2,7 @@ from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from wise.content.search import db, sql
 
 from .base import ItemDisplayForm, MarineUnitIDSelectForm
-from .utils import data_to_xls, pivot_data, register_form
+from .utils import data_to_xls, pivot_query, register_form
 
 
 @register_form
@@ -19,11 +19,28 @@ class A10Form(MarineUnitIDSelectForm):
     def download_results(self):
         muids = self.get_marine_unit_ids()
         count, data = db.get_all_records(
-            self.mapper_class, self.mapper_class.MarineUnitID.in_(muids)
+            self.mapper_class,
+            self.mapper_class.MarineUnitID.in_(muids)
+        )
+
+        target_ids = [row.MSFD10_Target_ID for row in data]
+
+        mapper_class_features_pres = sql.t_MSFD10_FeaturesPressures
+        count_fp, data_fp = db.get_all_records(
+            mapper_class_features_pres,
+            mapper_class_features_pres.c.MSFD10_Target.in_(target_ids)
+        )
+
+        mapper_class_des_crit = sql.t_MSFD10_DESCrit
+        count_dc, data_dc = db.get_all_records(
+            mapper_class_des_crit,
+            mapper_class_des_crit.c.MSFD10_Target.in_(target_ids)
         )
 
         xlsdata = [
             ('MSFD10Target', data),      # worksheet title, row data
+            ('MSFD10_FeaturesPressures', data_fp),
+            ('MSFD10_DESCrit', data_dc),
         ]
 
         return data_to_xls(xlsdata)
@@ -47,16 +64,23 @@ class A10ItemDisplay(ItemDisplayForm):
 
         target_id = self.item.MSFD10_Target_ID
 
-        res = db.get_a10_feature_targets(target_id)
-        ft = pivot_data(res, 'FeatureType')
+        t = sql.t_MSFD10_FeaturesPressures
+        c, res = db.get_table_records([
+            t.c.FeatureType,
+            t.c.PhysicalChemicalHabitatsFunctionalPressures,
+        ], t.c.MSFD10_Target == target_id)
+        ft = pivot_query(res, 'FeatureType')
 
-        res = db.get_a10_criteria_indicators(target_id)
-        res = {
-            '':
-            [{'GESDescriptorsCriteriaIndicators': x[0]} for x in res]
-        }
+        # res = db.get_a10_criteria_indicators(target_id)
+
+        t = sql.t_MSFD10_DESCrit
+        c, res = db.get_table_records(
+            [t.c.GESDescriptorsCriteriaIndicators],
+            t.c.MSFD10_Target == target_id
+        )
+        fr = pivot_query(res, 'GESDescriptorsCriteriaIndicators')
 
         return [
             ('Feature Type', ft),
-            ('Criteria Indicators', res),
+            ('Criteria Indicators', fr),
         ]

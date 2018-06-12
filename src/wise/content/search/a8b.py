@@ -5,8 +5,8 @@ from z3c.form.field import Fields
 
 from .base import (EmbededForm, ItemDisplay, MarineUnitIDSelectForm,
                    MultiItemDisplayForm)
-from .utils import (data_to_xls, default_value_from_field, register_form,
-                    register_form_section, register_subform)
+from .utils import (data_to_xls, register_form, register_form_section,
+                    register_subform)
 from .vocabulary import SubFormsVocabulary
 
 

@@ -8,6 +8,7 @@ from zope.component import getUtility
 from zope.schema.interfaces import IVocabularyFactory
 
 import xlsxwriter
+from inspect import isclass
 
 FORMS_ART11 = {}
 FORMS = {}                         # main chapter 1 article form classes
@@ -145,7 +146,12 @@ def data_to_xls(data):
         worksheet = workbook.add_worksheet(wtitle)
 
         row0 = wdata[0]
-        fields = sorted(get_obj_fields(row0))
+        is_tuple = isinstance(row0, tuple)
+        # import pdb; pdb.set_trace()
+        if not is_tuple:
+            fields = sorted(get_obj_fields(row0))
+        else:
+            fields = row0._fields
 
         # write titles
 
@@ -154,7 +160,10 @@ def data_to_xls(data):
 
         for j, row in enumerate(wdata):
             for i, f in enumerate(fields):
-                value = getattr(row, f)
+                if not is_tuple:
+                    value = getattr(row, f)
+                else:
+                    value = row[i]
 
                 if not isinstance(value,
                                   string_types + (float, int, type(None))):
@@ -189,7 +198,7 @@ def get_obj_fields(obj):
     return res
 
 
-def db_objects_to_dict(data):
+def db_objects_to_dict(data, excluded_columns=()):
     """
     Transform a list of sqlalchemy DB objects into
     a list of dictionaries, needed for pivot_data()
@@ -198,11 +207,14 @@ def db_objects_to_dict(data):
     :return: list of dictionaries
     """
     out = []
+
     for row in data:
         columns = row.__table__.columns.keys()
         d = dict()
+
         for col in columns:
-            d.update({col: getattr(row, col)})
+            if col not in excluded_columns:
+                d.update({col: getattr(row, col)})
         out.append(d)
 
     return out
@@ -219,6 +231,19 @@ def pivot_data(data, pivot):
     return out
 
 
+def pivot_query(query, pivot):
+    """ Pivot results from a query over a table
+    """
+
+    cols = [x['name'] for x in query.column_descriptions]
+    res = [dict(zip(cols, row)) for row in query]
+
+    if len(cols) == 1:
+        return {pivot: res}
+
+    return pivot_data(res, pivot)
+
+
 def default_value_from_field(context, field):
     """ Get the defaulf value for a choice field
     """
@@ -233,6 +258,10 @@ def default_value_from_field(context, field):
 
     term = vocab._terms[0]
 
+    # import pdb;pdb.set_trace()
+
+    if isclass(term.value):
+        return term.value, term.token
     return term.token
 
 

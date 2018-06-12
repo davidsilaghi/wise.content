@@ -1,8 +1,5 @@
-from zope.component import adapter
-from zope.interface import Interface, implementer
-
 from z3c.form.browser.select import SelectWidget
-from z3c.form.interfaces import NO_VALUE, IFieldWidget, IFormLayer
+from z3c.form.interfaces import NO_VALUE
 from z3c.form.widget import FieldWidget
 
 
